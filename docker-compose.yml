@@ -1,0 +1,31 @@
+
+
+services:
+  # Ваше приложение
+  orderprod:
+    image: orderprod
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # Порт для вашего приложения
+    depends_on:
+      - postgresdb  # Зависимость от PostgreSQL
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgresdb;Port=5432;Database=mydatabase;Username=postgres;Password=12345
+
+  # База данных PostgreSQL
+  postgresdb:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"  # Порт для PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+# Том для хранения данных PostgreSQL
+volumes:
+  postgres_data:
