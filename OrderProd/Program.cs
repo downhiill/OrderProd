@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OrderProd;
+using OrderProd.Exception;
 
 var builder = WebApplication.CreateBuilder(args);
 
