@@ -6,6 +6,8 @@ using OrderProd.Exception;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<IRepository<Product>, Repository<Product>>();
+
 
 // Program.cs или Startup.cs
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -22,13 +24,15 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyAwesomeApi v1"));
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate(); 
 }
+
+app.UseDeveloperExceptionPage();
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyAwesomeApi v1"));
 
 app.UseRouting();
 
