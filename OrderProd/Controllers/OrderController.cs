@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OrderProd.Model.Request;
+using System.ComponentModel.DataAnnotations;
 
 namespace OrderProd.Controllers
 {
@@ -29,7 +31,7 @@ namespace OrderProd.Controllers
 
             if (product == null)
             {
-                return NotFound();
+                throw new KeyNotFoundException(); 
             }
 
             return Ok(product);
@@ -37,38 +39,48 @@ namespace OrderProd.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
+        public async Task<ActionResult<Product>> PostProduct(PostProductRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var product = new Product
+            {
+                Name = request.Name,
+                Price = request.Price
+            };
+
             await _productRepository.AddAsync(product);
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct(int id, Product product)
+        public async Task<IActionResult> PutProduct(PutProductRequest request)
         {
-            if (id != product.Id)
+
+            if (string.IsNullOrEmpty(request.Name) || request.Price <= 0)
             {
-                return BadRequest();
+                return BadRequest("Название и цена продукта обязательны и цена должна быть больше нуля.");
             }
 
-            try
+            var product = await _productRepository.GetByIdAsync(request.Id);
+            if (product == null)
             {
-                await _productRepository.UpdateAsync(product);
+                return NotFound("Продукт не найден.");
             }
-            catch
-            {
-                if (await _productRepository.GetByIdAsync(id) == null)
-                {
-                    return NotFound();
-                }
-                throw;
-            }
+
+            product.Name = request.Name;
+            product.Price = request.Price;
+
+            await _productRepository.UpdateAsync(product);
 
             return NoContent();
         }
 
-        
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
